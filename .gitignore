@@ -1,0 +1,5 @@
+PROJECT_ENV/
+PROJECT/console.bat
+__pycache__
+migrations
+PROJECT/SQLite.log
