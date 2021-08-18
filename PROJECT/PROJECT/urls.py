@@ -17,11 +17,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls import url
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    
     path('select2/', include('django_select2.urls')),
-    #path('searchableselect/', include('searchableselect.urls')),
     path('mock_service/', include('mock_service.urls')),
+
 ]

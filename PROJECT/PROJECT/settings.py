@@ -38,12 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #'django_crontab', # не работает для Windows # для регулярно вызываемой функции через какоето время # pip install django-crontab 
-    #'django_apscheduler', # pip install django-apscheduler
-    'adminsortable2',      # для перетаскиваний в админке # pip install django-admin-sortable2   
-    'django_json_widget',  # для красивого ввода json # pip install django-json-widget
-    'django_select2',      # для dropdown with search # pip install django_select2
-    #'searchableselect', # для dropdown with search # pip install django-searchable-select но там ошибка маленькая в исходнике (сразу всплывает, легко исправить)
+    'adminsortable2',      # manual sorting # pip install django-admin-sortable2   
+    'django_json_widget',  # comfortable json redactor # pip install django-json-widget
+    'django_select2',      # for dropdown with search # pip install django_select2
 
     'mock_service',
 ]
@@ -154,18 +151,7 @@ STATICFILES_FINDERS = (
     )
 
 
-
-# CRONJOBS = [ # не работает на Windows
-#     ('*/5 * * * *', 'mock_service.cron.print_something',['some_text'], {'key': 'value'}),
-# ]
-
-
-
-
-# SCHEDULER_AUTOSTART = True
-
-
-# ???
+# i don't know how it work, but it is make logging for SQLite
 LOGGING = {
     'version': 1,
     'filters': {
