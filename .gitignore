@@ -3,3 +3,4 @@ PROJECT/console.bat
 __pycache__
 migrations
 PROJECT/SQLite.log
+db.sqlite3
