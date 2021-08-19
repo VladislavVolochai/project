@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 
     'adminsortable2',      # manual sorting # pip install django-admin-sortable2   
     'django_json_widget',  # comfortable json redactor # pip install django-json-widget
-    'django_select2',      # for dropdown with search # pip install django_select2
+    'django_select2',      # for dropdown with search # pip install django-select2
 
     'mock_service',
 ]
