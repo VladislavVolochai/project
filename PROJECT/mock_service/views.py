@@ -17,7 +17,9 @@ DELETE_REQUESTS_AFTER_MINUTES = 1
 
 
 def update_requests(request): 
-    OurRequest.objects.filter(time__lte=datetime.now()-timedelta(minutes=DELETE_REQUESTS_AFTER_MINUTES)).delete() # bad idea, cron needs for it
+    OurRequest.objects.filter(
+        time__lte=datetime.now()-timedelta(minutes=DELETE_REQUESTS_AFTER_MINUTES)
+    ).delete() # bad idea, cron needs for it
 
     request_url = unquote(request.get_full_path())
     request_body = unquote(request.body)
@@ -36,27 +38,49 @@ def update_requests(request):
 
 
 @csrf_exempt
-def get_mock(request, group=None):
+def get_mock(request, group=''):
     # if not group: Mock.objects.all()
     mocks = None
     match = None
+    count = 0 # requests dublicate. Default Mock.number
     
+    #request_url = unquote(request.get_full_path())
+    #request_body = unquote(request.body)
+
     count, request_url, request_body = update_requests(request)
 
-    mocks = Mock.objects.order_by('-number').filter(Q(request_method='any')|Q(request_method__icontains=request.method), active=True, group__active=True,group__slug=group, number__lte=count).prefetch_related('words') if group else Mock.objects.order_by('-number').filter(Q(request_method='any')|Q(request_method__icontains=request.method) ,active=True, group__active=True, number__lte=count).prefetch_related('words')
+    if group == 'NULL':
+        mocks = Mock.objects.order_by('-number').filter(
+            Q(request_method='any')|Q(request_method__icontains=request.method), 
+            active=True, group__active=True, number__lte=count
+        ).prefetch_related('words')
+    else:
+        mocks = Mock.objects.order_by('-number').filter(
+            Q(request_method='any')|Q(request_method__icontains=request.method), 
+            active=True, group__active=True,group__slug=group, number__lte=count
+        ).prefetch_related('words')
 
     for mock in mocks:
         words = [i.content for i in mock.words.all()]
 
         if mock.all_words: # Mock.all_words => 'All'
-            if all([i in request_url or i in request_body or i in str(request.headers.__dict__['_store']) for i in words]):
+            if all(
+                [i in request_url or 
+                 i in request_body or 
+                 i in str(request.headers.__dict__['_store']) 
+                 for i in words]
+                ):
                 match = mock
                 break
         else: # Mock.all_words => 'Any'
-            if any([i in request_url or i in request_body or i in str(request.headers.__dict__['_store']) for i in words]):
+            if any(
+                [i in request_url or 
+                 i in request_body or 
+                 i in str(request.headers.__dict__['_store']) 
+                 for i in words]
+                ):
                 match = mock
                 break
-
 
     if match:
         response = HttpResponse()

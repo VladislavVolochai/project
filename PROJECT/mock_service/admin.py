@@ -43,8 +43,14 @@ class GroupAdmin(admin.ModelAdmin):
 @admin.register(Mock)
 class MockAdmin(SortableAdminMixin, admin.ModelAdmin):
     save_on_top = True
-    search_fields = ('title__icontains', 'group__title__icontains', 'words__content__icontains', 'group__slug__icontains')
-    list_display = ('o','number','title','group_url','request_method','active','group_activity')
+    search_fields = (
+        'title__icontains', 'group__title__icontains', 
+        'words__content__icontains', 'group__slug__icontains',
+    )
+    list_display = (
+        'o','number','title','group_url',
+        'request_method','active','group_activity',
+    )
     list_display_links = ('title',)
     list_filter = ('group__active','active')
     actions = ['active_True','active_False']
