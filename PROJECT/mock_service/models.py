@@ -2,12 +2,17 @@ from django.db import models
 from django.urls import reverse
 from django.conf import settings
 from django.utils.encoding import smart_str, smart_bytes
-from django.core.validators import ValidationError
+from django.core.validators import ValidationError, RegexValidator
 
 
 def headers_validation(value):
-    try: str(value).encode('iso-8859-1') # Python39\lib\wsgiref\headers.py  line 142     return str(self).encode('iso-8859-1')
-    except: raise ValidationError(f'Bad headers for iso-8859-1')
+    try: 
+        str(value).encode('iso-8859-1') # Python39\lib\wsgiref\headers.py  line 142     return str(self).encode('iso-8859-1')
+    except: 
+        raise ValidationError(f'Bad headers characters for iso-8859-1')
+    else: 
+        if not isinstance(value, dict) or not all(isinstance(i, str) for i in value.values()):
+            raise ValidationError(f'Headers mast be dict with keys and values - string type')
 
 
 class OurRequest(models.Model):
@@ -53,15 +58,15 @@ class Mock(models.Model):
             (True,'All'),
             (False,'Any'),
         )
-    active = models.BooleanField(default=False, verbose_name='Mock active', null=False, blank=False)
+    active = models.BooleanField(default=True, verbose_name='Mock active', null=False, blank=False)
     all_words = models.BooleanField(default=True, verbose_name='All/Any matches', null=False, blank=False, choices=ALL_ANY)
-    number = models.PositiveIntegerField(default=0, verbose_name='Mock number', null=False, blank=False, help_text='A higher number will be returned, but not exceeding the number of duplicate requests in short time.')
+    number = models.PositiveIntegerField(default=0, verbose_name='Mock number', null=False, blank=False, help_text='Mock with higher number will be returned, but not exceeding the number of duplicate requests in short time.')
     request_method = models.CharField(verbose_name='Request methods', default='any', max_length=100, null=False, blank=False, help_text='any, GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH')
     title = models.CharField(verbose_name='Title', max_length=100, null=True, blank=False)
     group = models.ForeignKey(Group,verbose_name='Group', on_delete=models.CASCADE, blank=False, related_name='mocks')
     description = models.TextField(null=True, blank=True)
     #words <- Word 
-    response_status_code = models.PositiveIntegerField(verbose_name='Response status code', default=200, null=False, blank=False)
+    response_status_code = models.PositiveIntegerField(verbose_name='Response status code', default=200, null=False, blank=False, validators=[RegexValidator(regex=r'^\d{3}$', message="Status message must begin w/3-digit code")])
     response_headers = models.JSONField(verbose_name='Response headers', null=True, blank=True, validators=[headers_validation])
     response_content = models.TextField(verbose_name='Response content',null=True, blank=True)
     update_time = models.DateTimeField(verbose_name='Updated', auto_now=True, null=True,editable=False)
@@ -87,7 +92,7 @@ class Mock(models.Model):
 
 
 class Word(models.Model):
-    content = models.CharField(max_length=50, verbose_name='Word', null=True, blank=False)
+    content = models.CharField(max_length=50, verbose_name='Word', null=True, blank=False, help_text='Case sensetivity')
     mock = models.ForeignKey(Mock, verbose_name='Mock', related_name='words', on_delete=models.CASCADE)
 
     def __str__(self):

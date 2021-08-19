@@ -16,13 +16,13 @@ import json
 DELETE_REQUESTS_AFTER_MINUTES = 1
 
 
-def update_requests(request):
-    OurRequest.objects.filter(time__lte=datetime.now()-timedelta(minutes=DELETE_REQUESTS_AFTER_MINUTES)).delete()
+def update_requests(request): 
+    OurRequest.objects.filter(time__lte=datetime.now()-timedelta(minutes=DELETE_REQUESTS_AFTER_MINUTES)).delete() # bad idea, cron needs for it
 
     request_url = unquote(request.get_full_path())
     request_body = unquote(request.body)
 
-    count = OurRequest.objects.filter(url=request_url,body=request_body).count() # bad idea, it's need cache
+    count = OurRequest.objects.filter(url=request_url,body=request_body).count() # bad idea, cache needs for it
 
     OurRequest(
         method=request.method,
@@ -43,23 +43,24 @@ def get_mock(request, group=None):
     
     count, request_url, request_body = update_requests(request)
 
-    mocks = Mock.objects.order_by('number').filter(Q(request_method='any')|Q(request_method__icontains=request.method), active=True, group__active=True,group__slug=group, number__lte=count).prefetch_related('words') if group else Mock.objects.order_by('number').filter(Q(request_method='any')|Q(request_method__icontains=request.method) ,active=True, group__active=True, number__lte=count).prefetch_related('words')
+    mocks = Mock.objects.order_by('-number').filter(Q(request_method='any')|Q(request_method__icontains=request.method), active=True, group__active=True,group__slug=group, number__lte=count).prefetch_related('words') if group else Mock.objects.order_by('-number').filter(Q(request_method='any')|Q(request_method__icontains=request.method) ,active=True, group__active=True, number__lte=count).prefetch_related('words')
 
     for mock in mocks:
         words = [i.content for i in mock.words.all()]
 
         if mock.all_words: # Mock.all_words => 'All'
-            if all([i in request_url for i in words]) or all([i in request_body for i in words]) or all([i in str(request.headers.__dict__['_store']) for i in words]):
+            if all([i in request_url or i in request_body or i in str(request.headers.__dict__['_store']) for i in words]):
                 match = mock
                 break
-        else: # Mock.all_words => 'Any'   (not optimized)
-            if any([i in request_url for i in words]) or any([i in request_body for i in words]) or any([i in str(request.headers.__dict__['_store']) for i in words]):
+        else: # Mock.all_words => 'Any'
+            if any([i in request_url or i in request_body or i in str(request.headers.__dict__['_store']) for i in words]):
                 match = mock
                 break
 
+
     if match:
         response = HttpResponse()
-        response.content = match.response_content
+        response.content = match.response_content #.encode('utf-8') 
         response.status_code = match.response_status_code
         if (rh := match.response_headers): response.headers = rh
         return response
